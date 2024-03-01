@@ -1,0 +1,7 @@
+xcorners
+*.o
+*.out
+*.a
+*.d
+compile_commands.json
+
