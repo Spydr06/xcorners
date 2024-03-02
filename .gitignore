@@ -4,4 +4,5 @@ xcorners
 *.a
 *.d
 compile_commands.json
+.cache/
 
