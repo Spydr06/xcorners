@@ -5,6 +5,7 @@
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/shape.h>
 
+#include <X11/extensions/shapeconst.h>
 #include <cairo.h>
 #include <cairo-xlib.h>
 
@@ -18,6 +19,7 @@
 
 #include <getopt.h>
 
+#define X_CLASS_NAME "xcorners"
 #define DEFAULT_RADIUS 12
 
 #define _(str) str
@@ -26,13 +28,14 @@
         exit(EXIT_FAILURE);             \
     } while(0)
 
-#define UNSIGNED_OPT(c, v) do {                                                                     \
-        (v) = (unsigned int) strtoul(optarg, NULL, 10);                                             \
-        if(errno)                                                                                   \
-            PANIC("%s: otion -- '%c' expects numeric argument: %s\n", *argv, (c), strerror(errno)); \
+#define UNSIGNED_OPT(c, v) do {                                                                         \
+        (v) = (unsigned int) strtoul(optarg, NULL, 10);                                                 \
+        if(errno)                                                                                       \
+            PANIC("%s: option -- '%c' expects numeric argument: %s\n", *argv, (c), strerror(errno));    \
     } while(0)
 
 unsigned width = 0, height = 0, radius = DEFAULT_RADIUS, x_offset = 0, y_offset = 0;
+bool top = true, bottom = false;
 
 Display* d = NULL;
 
@@ -55,27 +58,43 @@ Options:\n\
   -x <offset>   Set the horizontal offset. [%u]\n\
   -y <offset>   Set the vertical offset. [%u]\n\
   -r <radius>   Set the corner radius. [%u]\n\
+  -t, -T        Enable or disable top corners. [%s]\n\
+  -b, -B        Enable or disable bottom corners. [%s]\n\
   -h, --help    Print this help text and exit.\n\
 "), 
-        pname, width, height, x_offset, y_offset, radius
+        pname, width, height, x_offset, y_offset, radius,
+        top ? "enabled" : "disabled", bottom ? "enabled" : "disabled"
     );
 
     exit(EXIT_SUCCESS); 
 }
 
 static void draw(cairo_t* c) {
-    cairo_arc(c, x_offset + radius, y_offset + radius, radius, -M_PI, -M_PI / 2);
-    cairo_line_to(c, x_offset, y_offset);
-    cairo_line_to(c, x_offset, y_offset + radius);
+    if(top) {
+        cairo_move_to(c, 0, 0); // top left
+        cairo_arc(c, radius, radius, radius, -M_PI, -M_PI / 2);
+        cairo_line_to(c, 0, 0);
+        cairo_line_to(c, 0, radius);
 
-    cairo_move_to(c, x_offset + width, y_offset);
-    cairo_arc(c, x_offset + width - radius, y_offset + radius, radius, -M_PI / 2, 0);
-    cairo_line_to(c, x_offset + width, y_offset);
-    cairo_line_to(c, x_offset + width - radius, y_offset);
+        cairo_move_to(c, width, 0); // top right
+        cairo_arc(c, width - radius, radius, radius, -M_PI / 2, 0);
+        cairo_line_to(c, width, 0);
+        cairo_line_to(c, width - radius, 0);
+    }
 
-    cairo_set_source_rgba(c, 0.7, 0.7, 0.7, 1.0);
-    cairo_fill_preserve(c);
-    
+    if(bottom) {
+        cairo_move_to(c, 0, height); // bottom left
+        cairo_arc(c, radius, height - radius, radius, M_PI / 2, M_PI);
+        cairo_line_to(c, 0, height);
+        cairo_line_to(c, 0, height - radius);
+
+        // bottom right
+        cairo_move_to(c, width, height);
+        cairo_arc(c, width - radius, height - radius, radius, 0, M_PI / 2);
+        cairo_line_to(c, width, height);
+        cairo_line_to(c, width - radius, height);
+    }
+
     cairo_set_source_rgba(c, 0.0, 0.0, 0.0, 1.0);
     cairo_fill(c);
 }
@@ -93,7 +112,7 @@ int main(int argc, char** argv) {
     height = DisplayHeight(d, s);
 
     int ch;
-    while((ch = getopt_long(argc, argv, "hx:y:W:H:r:", cmdline_options, NULL)) != EOF) {
+    while((ch = getopt_long(argc, argv, "hx:y:W:H:r:tTbB", cmdline_options, NULL)) != EOF) {
         switch(ch)
         {
             case 'h':
@@ -113,45 +132,101 @@ int main(int argc, char** argv) {
             case 'r':
                 UNSIGNED_OPT('r', radius);
                 break;
-           default:
+            case 't':
+                top = true;
+                break;
+            case 'T':
+                top = false;
+                break;
+            case 'b':
+                bottom = true;
+                break;
+            case 'B':
+                bottom = false;
+                break;
+            default:
                 PANIC("%s: invalid option -- '%c'\nTry `%s --help` for more information.\n", *argv, ch, *argv);
         }
     }
 
     Window root = RootWindow(d, s);
 
-    XCompositeRedirectSubwindows(d, root, CompositeRedirectAutomatic);
-    XSelectInput(d, root, SubstructureNotifyMask);
+    XVisualInfo vinfo;
+    if(!XMatchVisualInfo(d, s, 32, TrueColor, &vinfo))
+        PANIC("%s: no visual found supporting 32 bit color.\n", *argv);
 
-    Window overlay = XCompositeGetOverlayWindow(d, root);
-    {
-        XserverRegion region = XFixesCreateRegion(d, NULL, 0);
-        XFixesSetWindowShapeRegion(d, overlay, ShapeBounding, 0, 0, 0);
-        XFixesSetWindowShapeRegion(d, overlay, ShapeInput, 0, 0, region);
-        XFixesDestroyRegion(d, region);
-    }
+    XSetWindowAttributes attrs;
+    attrs.override_redirect = true;
+    attrs.colormap = XCreateColormap(d, root, vinfo.visual, AllocNone);
+    attrs.background_pixel = 0;
+    attrs.border_pixel = 0;
 
-    cairo_surface_t* surface = cairo_xlib_surface_create(d, overlay, DefaultVisual(d, s), width, radius + y_offset);
+    Window window = XCreateWindow(
+        d, root,
+        x_offset, y_offset, width, height, 0,
+        vinfo.depth, InputOutput,
+        vinfo.visual,
+        CWOverrideRedirect | CWColormap | CWBackPixel | CWBorderPixel,
+        &attrs
+    );
+
+    XSetClassHint(d, window, 
+        &(XClassHint){.res_name = X_CLASS_NAME, .res_class = X_CLASS_NAME}
+    );
+
+    XSelectInput(d, window, ExposureMask | PropertyChangeMask);
+
+    XserverRegion region = XFixesCreateRegion(d, NULL, 0);
+    XFixesSetWindowShapeRegion(d, window, ShapeInput, x_offset, y_offset, region);
+    XFixesDestroyRegion(d, region);
+
+    XMapWindow(d, window);
+
+    cairo_surface_t* surface = cairo_xlib_surface_create(d, window, vinfo.visual, width, height);
     cairo_t* cr = cairo_create(surface);
+    
+    Atom wm_state = XInternAtom(d, "_NET_WM_STATE", False),
+         fullscreen = XInternAtom(d, "_NET_WM_STATE_FULLSCREEN", False);
 
-    cairo_surface_t* offscreen_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, radius + y_offset);
-    cairo_t* offscreen_cr = cairo_create(offscreen_surface);
-    draw(offscreen_cr); // corners don't change, so this is fine
-    cairo_set_source_surface(cr, offscreen_surface, 0, 0);
-   
-    unsigned refresh_rate = 60;
-    struct timespec ts = {0, (unsigned long)(1.0L/((long double) refresh_rate) * 1000000000.0L)};
+    XEvent ev;
     while(1) {
-        nanosleep(&ts, NULL);
-        XSync(d, False);
-        cairo_paint(cr);
-        XFlush(d);
+        XNextEvent(d, &ev);
+        switch(ev.type) {
+            case Expose:
+                draw(cr);
+                cairo_surface_flush(surface);
+                XFlush(d);
+                break;
+            case PropertyNotify: {
+                if(ev.xproperty.atom != wm_state)
+                    break;
+                 
+                int format;
+                unsigned long nitems, bytes_after;
+                Atom* data = NULL, type;
+
+                //XGetWindowAttributes(d, root, &ev.xproperty.window);
+                XGetWindowProperty(d, root, wm_state, 0, 1024, False, AnyPropertyType, &type, &format, &nitems, &bytes_after, (unsigned char**) &data);
+
+                if(!data)
+                    break;
+
+                for(unsigned long i = 0; i < nitems; i++) {
+                    if(data[i] == fullscreen)
+                        XUnmapWindow(d, window);
+                }
+                XFree(data);
+            } break;
+            default:
+                printf("unhandled event: %d\n", ev.type);
+                break;
+        }
     }
 
     cairo_destroy(cr);
-    cairo_destroy(offscreen_cr);
     cairo_surface_destroy(surface);
-    cairo_surface_destroy(offscreen_surface);
+
+    XUnmapWindow(d, window);
     return EXIT_SUCCESS;
 }
 
