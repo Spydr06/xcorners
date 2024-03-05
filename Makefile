@@ -1,7 +1,7 @@
 XCORNERS := xcorners
 
-CFLAGS += -Wall -Wextra -pedantic -std=gnu99 $(shell pkg-config --cflags x11 xfixes xcomposite cairo) -O3
-LDFLAGS += $(shell pkg-config --libs x11 xfixes xcomposite cairo)
+CFLAGS += -Wall -Wextra -pedantic -std=gnu99 $(shell pkg-config --cflags x11 xfixes cairo)
+LDFLAGS += $(shell pkg-config --libs x11 xfixes cairo)
 
 .PHONY: all
 all: $(XCORNERS)
