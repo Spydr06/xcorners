@@ -55,6 +55,8 @@ This installs `xcorners` to `/usr/bin`, if you want another prefix, set it using
 - [ ] Automatic fullscreen detection
 - [ ] Bugtesting
 
+> If you encounter bugs, have more ideas or want to expand the functionality, feel free to open an issue or pull request :D
+
 ## License
 
 `xcorners` is licensed under the MIT license. See [./LICENSE](./LICENSE) for more information.
