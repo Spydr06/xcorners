@@ -1,3 +1,4 @@
+#include <X11/Xutil.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -51,6 +52,7 @@ Options:\n\
   -t, -T        Enable or disable top corners. [%s]\n\
   -b, -B        Enable or disable bottom corners. [%s]\n\
   -c <color>    Set the corner color. [%08x]\n\
+  -1            Only allow one instance.\n\
   -h, --help    Print this help text and exit.\n\
 "), 
         pname, width, height, x_offset, y_offset, radius,
@@ -59,6 +61,31 @@ Options:\n\
     );
 
     exit(EXIT_SUCCESS); 
+}
+
+static void check_other_instances(Display* d, Window root)
+{
+    Window root_return, parent_return, *children;
+    unsigned num_children;
+    if(!XQueryTree(d, root, &root_return, &parent_return, &children, &num_children))
+        return;
+
+    for(unsigned i = 0; i < num_children; i++) {
+        XClassHint class_hint;
+        if(!XGetClassHint(d, children[i], &class_hint))
+            continue;
+
+        if(strcmp(class_hint.res_class, X_CLASS_NAME) == 0) {
+            XCloseDisplay(d);
+            printf("Another instance is already running, terminating as indicated by `-1`.\n");
+            exit(0);
+        }
+
+        XFree(class_hint.res_name);
+        XFree(class_hint.res_class);
+    }
+
+    XFree(children);
 }
 
 static void draw(cairo_t* c) {
@@ -101,13 +128,14 @@ int main(int argc, char** argv) {
         PANIC("X11 Error: %s\n", strerror(errno));
 
     int s = DefaultScreen(d);
-    errno = 0;
+    Window root = RootWindow(d, s); 
 
     width = DisplayWidth(d, s);
     height = DisplayHeight(d, s);
 
+    errno = 0;
     int ch;
-    while((ch = getopt_long(argc, argv, "hx:y:W:H:r:tTbBc:", cmdline_options, NULL)) != EOF) {
+    while((ch = getopt_long(argc, argv, "hx:y:W:H:r:tTbBc:1", cmdline_options, NULL)) != EOF) {
         switch(ch)
         {
             case 'h':
@@ -142,6 +170,9 @@ int main(int argc, char** argv) {
             case 'B':
                 bottom = false;
                 break;
+            case '1':
+                check_other_instances(d, root);
+                break;
             default:
                 PANIC("%s: invalid option -- '%c'\nTry `%s --help` for more information.\n", *argv, ch, *argv);
         }
@@ -150,7 +181,6 @@ int main(int argc, char** argv) {
     if(optind < argc)
         PANIC("%s: invalid option -- '%s'\nTry `%s --help` for more information.\n", *argv, argv[optind], *argv);
 
-    Window root = RootWindow(d, s);
 
     XVisualInfo vinfo;
     if(!XMatchVisualInfo(d, s, 32, TrueColor, &vinfo))
