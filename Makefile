@@ -13,8 +13,8 @@ $(XCORNERS): *.c
 	$(CC) $(CFLAGS) -MMD -MP $^ -o $@ $(LDFLAGS) 
 
 .PHONY: install
-install:
-	install -v -D -m 755 $(XCORNERS) $(EXEC_PREFIX)/$(XCORNERS)
+install: $(XCORNERS)
+	install -v -D -m 755 $^ $(EXEC_PREFIX)/$(XCORNERS)
 
 .PHONY: uninstall
 uninstall:
