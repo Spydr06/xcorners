@@ -3,11 +3,22 @@ XCORNERS := xcorners
 CFLAGS += -Wall -Wextra -pedantic -std=gnu99 $(shell pkg-config --cflags x11 xfixes cairo)
 LDFLAGS += $(shell pkg-config --libs x11 xfixes cairo)
 
+PREFIX ?= /usr
+EXEC_PREFIX ?= $(PREFIX)/bin
+
 .PHONY: all
 all: $(XCORNERS)
 
 $(XCORNERS): *.c
 	$(CC) $(CFLAGS) -MMD -MP $^ -o $@ $(LDFLAGS) 
+
+.PHONY: install
+install:
+	install -v -D -m 755 $(XCORNERS) $(EXEC_PREFIX)/$(XCORNERS)
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(EXEC_PREFIX)/$(XCORNERS)
 
 .PHONY: clean
 clean:

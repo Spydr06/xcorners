@@ -196,8 +196,10 @@ int main(int argc, char** argv) {
                 cairo_surface_flush(surface);
                 XFlush(d);
                 break;
-           default:
+            default:
+#ifndef NDEBUG
                 printf("unhandled event: %d\n", ev.type);
+#endif
                 break;
         }
     }
