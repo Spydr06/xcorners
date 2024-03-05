@@ -47,6 +47,14 @@ If successful, this creates the executable `./xcorners`.
 
 This installs `xcorners` to `/usr/bin`, if you want another prefix, set it using `PREFIX=""` or `EXEC_PREFIX=""`.
 
+## TO-DO
+
+- [x] Basic functionality
+- [x] Option to not launch when instance is already running
+- [ ] Automatic screen detection and configuration
+- [ ] Automatic fullscreen detection
+- [ ] Bugtesting
+
 ## License
 
 `xcorners` is licensed under the MIT license. See [./LICENSE](./LICENSE) for more information.
