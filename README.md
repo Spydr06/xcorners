@@ -21,6 +21,9 @@ Options:
   -h, --help    Print this help text and exit.
 ```
 
+> [!IMPORTANT]
+> If you experience issues with (partially) black screens, you'll need to enable a transparancy-capable x11 compositor.
+
 ## Install
 
 **Dependencies:**
