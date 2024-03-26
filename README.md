@@ -24,6 +24,10 @@ Options:
 > [!IMPORTANT]
 > If you experience issues with (partially) black screens, you'll need to enable a transparancy-capable x11 compositor.
 
+> Example usage: My
+> [bspwm](https://github.com/Spydr06/dotfiles/blob/b9833f142d992542564b92e94364ea79582aa530/.config/bspwm/bspwmrc#L31C1-L31C41) and
+> [sxhkd](https://github.com/Spydr06/dotfiles/blob/b9833f142d992542564b92e94364ea79582aa530/.config/sxhkd/sxhkdrc#L89-L94) configuration.
+
 ## Install
 
 **Dependencies:**
