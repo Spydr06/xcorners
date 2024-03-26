@@ -2,6 +2,9 @@
 
 A small utility to draw rounded screen corners on X11 window managers.
 
+> `xcorners` with polybar on bspwm:
+> ![demo.png](./demo.png)
+
 ## Usage
 
 ```
