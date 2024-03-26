@@ -21,6 +21,13 @@ Options:
   -h, --help    Print this help text and exit.
 ```
 
+> [!IMPORTANT]
+> If you experience issues with (partially) black screens, you'll need to enable a transparancy-capable x11 compositor.
+
+> Example usage: My
+> [bspwm](https://github.com/Spydr06/dotfiles/blob/b9833f142d992542564b92e94364ea79582aa530/.config/bspwm/bspwmrc#L31C1-L31C41) and
+> [sxhkd](https://github.com/Spydr06/dotfiles/blob/b9833f142d992542564b92e94364ea79582aa530/.config/sxhkd/sxhkdrc#L89-L94) configuration.
+
 ## Install
 
 **Dependencies:**
@@ -54,6 +61,8 @@ This installs `xcorners` to `/usr/bin`, if you want another prefix, set it using
 - [ ] Automatic screen detection and configuration
 - [ ] Automatic fullscreen detection
 - [ ] Bugtesting
+
+> If you encounter bugs, have more ideas or want to expand the functionality, feel free to open an issue or pull request :D
 
 ## License
 
