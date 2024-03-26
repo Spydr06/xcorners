@@ -214,6 +214,8 @@ int main(int argc, char** argv) {
 
     XMapWindow(d, window);
 
+    XLowerWindow(d, window);
+
     cairo_surface_t* surface = cairo_xlib_surface_create(d, window, vinfo.visual, width, height);
     cairo_t* cr = cairo_create(surface);
     
