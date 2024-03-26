@@ -1,7 +1,10 @@
 XCORNERS := xcorners
 
-CFLAGS += -Wall -Wextra -pedantic -std=gnu99 $(shell pkg-config --cflags x11 xfixes cairo)
-LDFLAGS += $(shell pkg-config --libs x11 xfixes cairo)
+X11_CFLAGS = $(shell pkg-config --cflags x11 xfixes cairo)
+X11_LIBS = $(shell pkg-config --libs x11 xfixes cairo) 
+
+CFLAGS += -Wall -Wextra -pedantic -std=gnu99 $(X11_CFLAGS) 
+LDFLAGS += $(X11_LIBS)
 
 PREFIX ?= /usr
 EXEC_PREFIX ?= $(PREFIX)/bin

@@ -66,5 +66,5 @@ This installs `xcorners` to `/usr/bin`, if you want another prefix, set it using
 
 ## License
 
-`xcorners` is licensed under the MIT license. See [./LICENSE](./LICENSE) for more information.
+`xcorners` is licensed under the MIT License. See [./LICENSE](./LICENSE) or the source for more information.
 
