@@ -33,6 +33,10 @@ Options:
 
 ## Install
 
+If you are using Arch Linux, you can install `xcorners` from the [`xcorners-git`](https://aur.archlinux.org/packages/xcorners-git) AUR package.
+
+Alternatively, you can build it from source.
+
 **Dependencies:**
 
 - `gcc`
@@ -70,4 +74,3 @@ This installs `xcorners` to `/usr/bin`, if you want another prefix, set it using
 ## License
 
 `xcorners` is licensed under the MIT License. See [./LICENSE](./LICENSE) or the source for more information.
-
